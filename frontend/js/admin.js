@@ -1,6 +1,5 @@
-
-const API_URL = "http://localhost:3000/api/pedidos";
-const PRODUCTS_API_URL = "http://localhost:3000/api/produtos";
+const API_URL = "https://glow-up-ecommerce-ijlp.onrender.com/api/pedidos";
+const PRODUCTS_API_URL = "https://glow-up-ecommerce-ijlp.onrender.com/api/produtos";
 
 
 const token = localStorage.getItem("glowup-token");
@@ -277,7 +276,14 @@ async function carregarProdutos() {
         }
 
         produtos = resultado;
+
         renderizarProdutos();
+
+        const estoqueBaixo = produtos.filter(
+            produto => Number(produto.estoque) <= 5
+        ).length;
+
+        document.getElementById("low-stock-products").textContent = estoqueBaixo;
 
     } catch (error) {
         console.error("Erro ao carregar produtos:", error);
@@ -286,13 +292,7 @@ async function carregarProdutos() {
             <p class="empty-orders">Não foi possível carregar os produtos.</p>
         `;
     }
-    const estoqueBaixo = produtos.filter(
-    produto => Number(produto.estoque) <= 5
-).length;
-
-document.getElementById("low-stock-products").textContent = estoqueBaixo;s
 }
-
 // EXIBIR PRODUTOS
 function renderizarProdutos() {
     if (produtos.length === 0) {

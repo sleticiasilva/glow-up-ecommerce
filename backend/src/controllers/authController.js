@@ -22,12 +22,12 @@ async function register(req, res) {
 
         const emailNormalizado = email.trim().toLowerCase();
 
-        const [existingUser] = await db.query(
-            "SELECT id FROM clientes WHERE email = ?",
+        const existingUser = await db.query(
+            "SELECT id FROM clientes WHERE email = $1",
             [emailNormalizado]
         );
 
-        if (existingUser.length > 0) {
+        if (existingUser.rows.length > 0) {
             return res.status(409).json({
                 message: "Este e-mail já está cadastrado."
             });
@@ -35,15 +35,17 @@ async function register(req, res) {
 
         const senhaHash = await bcrypt.hash(senha, 10);
 
-        const [result] = await db.query(
-            "INSERT INTO clientes (nome, email, senha_hash) VALUES (?, ?, ?)",
+        const result = await db.query(
+            `INSERT INTO clientes (nome, email, senha_hash)
+             VALUES ($1, $2, $3)
+             RETURNING id`,
             [nome.trim(), emailNormalizado, senhaHash]
         );
 
         res.status(201).json({
             message: "Cadastro realizado com sucesso!",
             cliente: {
-                id: result.insertId,
+                id: result.rows[0].id,
                 nome: nome.trim(),
                 email: emailNormalizado,
                 perfil: "cliente"
@@ -72,21 +74,21 @@ async function login(req, res) {
 
         const emailNormalizado = email.trim().toLowerCase();
 
-        const [users] = await db.query(
+        const result = await db.query(
             `SELECT id, nome, email, senha_hash, perfil
              FROM clientes
-             WHERE email = ?
+             WHERE email = $1
              LIMIT 1`,
             [emailNormalizado]
         );
 
-        if (users.length === 0) {
+        if (result.rows.length === 0) {
             return res.status(401).json({
                 message: "E-mail ou senha incorretos."
             });
         }
 
-        const cliente = users[0];
+        const cliente = result.rows[0];
 
         const senhaCorreta = await bcrypt.compare(
             senha,

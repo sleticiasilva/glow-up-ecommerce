@@ -2,6 +2,8 @@
 const jwt = require("jsonwebtoken");
 
 function authMiddleware(req, res, next) {
+    console.log("AUTH MIDDLEWARE EXECUTADO");
+
     const authorization = req.headers.authorization;
 
     if (!authorization || !authorization.startsWith("Bearer ")) {
@@ -26,11 +28,14 @@ function authMiddleware(req, res, next) {
     }
 }
 
-// VERIFICA SE O USUÁRIO É ADMINISTRADOR
 function adminMiddleware(req, res, next) {
+    console.log("ADMIN MIDDLEWARE EXECUTADO");
+    console.log("USUÁRIO AUTENTICADO:", req.cliente);
+
     if (!req.cliente || req.cliente.perfil !== "admin") {
         return res.status(403).json({
-            message: "Acesso permitido somente para administradores."
+            message: "Acesso permitido somente para administradores.",
+            perfilRecebido: req.cliente?.perfil || null
         });
     }
 

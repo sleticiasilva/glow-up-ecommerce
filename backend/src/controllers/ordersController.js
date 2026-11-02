@@ -1,12 +1,13 @@
 
 const db = require("../config/database");
 
+// CRIAR PEDIDO
 async function createOrder(req, res) {
     let connection;
     let transactionStarted = false;
 
     try {
-        connection = await db.getConnection();
+        connection = await db.connect();
 
         const clienteId = req.cliente.id;
         const { itens } = req.body;
@@ -40,28 +41,28 @@ async function createOrder(req, res) {
             );
         }
 
-        await connection.beginTransaction();
+        await connection.query("BEGIN");
         transactionStarted = true;
 
         let total = 0;
         const itensPedido = [];
 
         for (const [produtoId, quantidade] of produtosAgrupados) {
-            const [produtos] = await connection.query(
+            const result = await connection.query(
                 `SELECT id, nome, preco, estoque
                  FROM produtos
-                 WHERE id = ?
+                 WHERE id = $1
                  FOR UPDATE`,
                 [produtoId]
             );
 
-            if (produtos.length === 0) {
+            if (result.rows.length === 0) {
                 throw new Error(`Produto ${produtoId} não encontrado.`);
             }
 
-            const produto = produtos[0];
+            const produto = result.rows[0];
 
-            if (produto.estoque < quantidade) {
+            if (Number(produto.estoque) < quantidade) {
                 throw new Error(
                     `Estoque insuficiente para ${produto.nome}.`
                 );
@@ -77,19 +78,20 @@ async function createOrder(req, res) {
             });
         }
 
-        const [pedido] = await connection.query(
+        const pedido = await connection.query(
             `INSERT INTO pedidos (cliente_id, total, status)
-             VALUES (?, ?, ?)`,
+             VALUES ($1, $2, $3)
+             RETURNING id`,
             [clienteId, total, "Pendente"]
         );
 
-        const pedidoId = pedido.insertId;
+        const pedidoId = pedido.rows[0].id;
 
         for (const item of itensPedido) {
             await connection.query(
                 `INSERT INTO itens_pedido
                  (pedido_id, produto_id, quantidade, preco_unitario)
-                 VALUES (?, ?, ?, ?)`,
+                 VALUES ($1, $2, $3, $4)`,
                 [
                     pedidoId,
                     item.produto_id,
@@ -100,13 +102,13 @@ async function createOrder(req, res) {
 
             await connection.query(
                 `UPDATE produtos
-                 SET estoque = estoque - ?
-                 WHERE id = ?`,
+                 SET estoque = estoque - $1
+                 WHERE id = $2`,
                 [item.quantidade, item.produto_id]
             );
         }
 
-        await connection.commit();
+        await connection.query("COMMIT");
         transactionStarted = false;
 
         return res.status(201).json({
@@ -121,7 +123,11 @@ async function createOrder(req, res) {
 
     } catch (error) {
         if (connection && transactionStarted) {
-            await connection.rollback();
+            try {
+                await connection.query("ROLLBACK");
+            } catch (rollbackError) {
+                console.error("Erro ao desfazer transação:", rollbackError);
+            }
         }
 
         console.error("Erro ao criar pedido:", error);
@@ -137,11 +143,12 @@ async function createOrder(req, res) {
     }
 }
 
+// CONSULTAR PEDIDOS DO CLIENTE
 async function getMyOrders(req, res) {
     try {
         const clienteId = req.cliente.id;
 
-        const [pedidos] = await db.query(
+        const result = await db.query(
             `SELECT
                 p.id,
                 p.total,
@@ -155,14 +162,14 @@ async function getMyOrders(req, res) {
              FROM pedidos p
              LEFT JOIN itens_pedido ip ON ip.pedido_id = p.id
              LEFT JOIN produtos pr ON pr.id = ip.produto_id
-             WHERE p.cliente_id = ?
+             WHERE p.cliente_id = $1
              ORDER BY p.criado_em DESC`,
             [clienteId]
         );
 
         const pedidosOrganizados = {};
 
-        for (const item of pedidos) {
+        for (const item of result.rows) {
             if (!pedidosOrganizados[item.id]) {
                 pedidosOrganizados[item.id] = {
                     id: item.id,
@@ -198,7 +205,7 @@ async function getMyOrders(req, res) {
 // ADMIN: CONSULTAR TODOS OS PEDIDOS
 async function getAllOrders(req, res) {
     try {
-        const [pedidos] = await db.query(
+        const result = await db.query(
             `SELECT
                 p.id,
                 p.total,
@@ -221,7 +228,7 @@ async function getAllOrders(req, res) {
 
         const pedidosOrganizados = {};
 
-        for (const item of pedidos) {
+        for (const item of result.rows) {
             if (!pedidosOrganizados[item.id]) {
                 pedidosOrganizados[item.id] = {
                     id: item.id,
@@ -284,14 +291,14 @@ async function updateOrderStatus(req, res) {
             });
         }
 
-        const [resultado] = await db.query(
+        const result = await db.query(
             `UPDATE pedidos
-             SET status = ?
-             WHERE id = ?`,
+             SET status = $1
+             WHERE id = $2`,
             [status, pedidoId]
         );
 
-        if (resultado.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 message: "Pedido não encontrado."
             });

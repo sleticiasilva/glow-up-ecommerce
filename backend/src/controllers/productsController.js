@@ -1,20 +1,21 @@
+
 const db = require("../config/database");
 
 // LISTAR PRODUTOS
 async function getProducts(req, res) {
     try {
-        console.log("Buscando produtos no MySQL...");
+        console.log("Buscando produtos no PostgreSQL...");
 
-        const [products] = await db.query(
+        const result = await db.query(
             "SELECT * FROM produtos ORDER BY id DESC"
         );
 
-        console.log("Produtos encontrados:", products.length);
+        console.log("Produtos encontrados:", result.rows.length);
 
-        res.json(products);
+        res.json(result.rows);
 
     } catch (error) {
-        console.error("ERRO REAL DO MYSQL:", error);
+        console.error("ERRO AO BUSCAR PRODUTOS:", error);
 
         res.status(500).json({
             message: "Erro ao buscar produtos."
@@ -55,10 +56,11 @@ async function createProduct(req, res) {
             });
         }
 
-        const [result] = await db.query(
+        const result = await db.query(
             `INSERT INTO produtos
             (nome, descricao, categoria, preco, imagem, estoque)
-            VALUES (?, ?, ?, ?, ?, ?)`,
+            VALUES ($1, $2, $3, $4, $5, $6)
+            RETURNING id`,
             [
                 nome.trim(),
                 descricao || "",
@@ -71,7 +73,7 @@ async function createProduct(req, res) {
 
         res.status(201).json({
             message: "Produto cadastrado com sucesso!",
-            id: result.insertId
+            id: result.rows[0].id
         });
 
     } catch (error) {
@@ -124,15 +126,15 @@ async function updateProduct(req, res) {
             });
         }
 
-        const [result] = await db.query(
+        const result = await db.query(
             `UPDATE produtos
-            SET nome = ?,
-                descricao = ?,
-                categoria = ?,
-                preco = ?,
-                imagem = ?,
-                estoque = ?
-            WHERE id = ?`,
+            SET nome = $1,
+                descricao = $2,
+                categoria = $3,
+                preco = $4,
+                imagem = $5,
+                estoque = $6
+            WHERE id = $7`,
             [
                 nome.trim(),
                 descricao || "",
@@ -144,7 +146,7 @@ async function updateProduct(req, res) {
             ]
         );
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 message: "Produto não encontrado."
             });
@@ -174,12 +176,12 @@ async function deleteProduct(req, res) {
             });
         }
 
-        const [result] = await db.query(
-            "DELETE FROM produtos WHERE id = ?",
+        const result = await db.query(
+            "DELETE FROM produtos WHERE id = $1",
             [id]
         );
 
-        if (result.affectedRows === 0) {
+        if (result.rowCount === 0) {
             return res.status(404).json({
                 message: "Produto não encontrado."
             });

@@ -1,3 +1,4 @@
+
 const express = require("express");
 const cors = require("cors");
 require("dotenv").config();
@@ -13,15 +14,17 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-// Rotas
+// ROTAS
 app.use("/api/auth", authRoutes);
 app.use("/api/produtos", productsRoutes);
 app.use("/api/pedidos", ordersRoutes);
 
+// ROTA INICIAL
 app.get("/", (req, res) => {
     res.send("Glow Up API funcionando!");
 });
 
+// VERIFICAR STATUS DA API E DO POSTGRESQL
 app.get("/api/status", async (req, res) => {
     try {
         await db.query("SELECT 1");
@@ -32,7 +35,7 @@ app.get("/api/status", async (req, res) => {
         });
 
     } catch (error) {
-        console.error("ERRO NA CONEXÃO COM MYSQL:", error);
+        console.error("ERRO NA CONEXÃO COM POSTGRESQL:", error);
 
         res.status(500).json({
             api: "online",

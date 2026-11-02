@@ -1,7 +1,9 @@
-console.log("GLOW UP SCRIPT CARREGADO!");console.log("GLOW UP SCRIPT CARREGADO!");
-const API_URL = "http://localhost:3000/api/produtos";
-const AUTH_API_URL = "http://localhost:3000/api/auth";
-const ORDERS_API_URL = "http://localhost:3000/api/pedidos";
+console.log("GLOW UP SCRIPT CARREGADO!");
+
+const API_URL = "https://glow-up-ecommerce-ijlp.onrender.com/api/produtos";
+const AUTH_API_URL = "https://glow-up-ecommerce-ijlp.onrender.com/api/auth";
+const ORDERS_API_URL = "https://glow-up-ecommerce-ijlp.onrender.com/api/pedidos";
+
 
 // Produtos carregados do banco de dados
 let products = [];
@@ -14,18 +16,6 @@ const overlay = document.getElementById("overlay");
 const modal = document.getElementById("product-modal");
 
 // Caminho das imagens
-function getProductImage(image) {
-    if (!image) {
-        return "https://placehold.co/600x600?text=Glow+Up";
-    }
-
-    // Permite usar URLs externas ou imagens locais
-    if (image.startsWith("http://") || image.startsWith("https://")) {
-        return image;
-    }
-
-    return `assets/images/${image}`;
-}
 
 function formatPrice(value) {
     return Number(value).toLocaleString("pt-BR", {
