@@ -1,0 +1,161 @@
+
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Glow Up | Painel Administrativo</title>
+    <link rel="stylesheet" href="css/admin.css">
+</head>
+<body>
+
+    <header class="admin-header">
+        <div>
+            <h1>Glow Up</h1>
+            <span>Painel administrativo</span>
+        </div>
+
+        <button id="logout-button">Sair</button>
+    </header>
+
+    <main class="admin-container">
+
+        <section class="welcome">
+            <h2>Bem-vinda ao painel!</h2>
+            <p>Gerencie os pedidos e produtos da sua loja.</p>
+        </section>
+
+        <nav class="admin-navigation">
+            <button class="admin-tab active" data-section="orders-section">
+                Gerenciar pedidos
+            </button>
+
+            <button class="admin-tab" data-section="products-section">
+                Gerenciar produtos
+            </button>
+        </nav>
+
+        <!-- ÁREA DE PEDIDOS -->
+       <section class="chart-container">
+    <h2>Pedidos por status</h2>
+    <canvas id="orders-chart"></canvas>
+</section>
+
+            <section class="summary">
+                <div class="summary-card">
+    <span>Valor total dos pedidos</span>
+    <strong id="total-revenue">R$ 0,00</strong>
+</div>
+
+<div class="summary-card">
+    <span>Produtos com estoque baixo</span>
+    <strong id="low-stock-products">0</strong>
+</div>
+                <div class="summary-card">
+                    <span>Total de pedidos</span>
+                    <strong id="total-orders">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Pendentes</span>
+                    <strong id="pending-orders">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Em processamento</span>
+                    <strong id="processing-orders">0</strong>
+                </div>
+
+                <div class="summary-card">
+                    <span>Entregues</span>
+                    <strong id="delivered-orders">0</strong>
+                </div>
+            </section>
+
+            <section class="orders-container">
+                <h2>Todos os pedidos</h2>
+
+                <div id="orders-list">
+                    <p>Carregando pedidos...</p>
+                </div>
+            </section>
+
+        </section>
+
+        <!-- ÁREA DE PRODUTOS -->
+        <section id="products-section" class="admin-section" hidden>
+
+            <div class="products-heading">
+                <div>
+                    <h2>Gerenciar produtos</h2>
+                    <p>Cadastre e atualize os produtos da Glow Up.</p>
+                </div>
+
+                <button id="add-product-button">
+                    + Novo produto
+                </button>
+            </div>
+
+            <div id="products-list">
+                <p>Carregando produtos...</p>
+            </div>
+
+        </section>
+
+        <!-- MODAL DE CADASTRO E EDIÇÃO -->
+        <div id="product-modal" class="product-modal" hidden>
+
+            <div class="product-modal-content">
+
+                <button type="button" id="close-product-modal" class="close-modal">
+                    &times;
+                </button>
+
+                <h2 id="product-form-title">Cadastrar produto</h2>
+
+                <form id="product-form">
+
+                    <input type="hidden" id="product-id">
+
+                    <label for="product-name">Nome do produto</label>
+                    <input type="text" id="product-name" required>
+
+                    <label for="product-description">Descrição</label>
+                    <textarea id="product-description" required></textarea>
+
+                    <label for="product-category">Categoria</label>
+                    <select id="product-category" required>
+                        <option value="">Selecione</option>
+                        <option value="limpeza">Limpeza</option>
+                        <option value="hidratacao">Hidratação</option>
+                        <option value="tratamento">Tratamento</option>
+                    </select>
+
+                    <label for="product-price">Preço (R$)</label>
+                    <input type="number" id="product-price" min="0.01" step="0.01" required>
+
+                    <label for="product-image">Nome do arquivo da imagem</label>
+                    <input
+                        type="text"
+                        id="product-image"
+                        placeholder="Ex: serum.png"
+                        required
+                    >
+
+                    <label for="product-stock">Estoque</label>
+                    <input type="number" id="product-stock" min="0" step="1" required>
+
+                    <button type="submit" id="save-product-button">
+                        Salvar produto
+                    </button>
+
+                </form>
+
+            </div>
+        </div>
+
+    </main>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="js/admin.js"></script>
+</body>
+</html>
